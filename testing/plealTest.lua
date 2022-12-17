@@ -2,10 +2,10 @@ local args = {...}
 
 package.path = package.path .. ";../src/?.lua"
 
-local clua = require("clua")
+local clua = require("pleal")
 --local clua = loadfile("../src/clua.lua")()
 
-local suc, conf, luaCode = clua.parseFile("input.lua")
+local suc, conf, luaCode = clua.parseFile("input.pleal")
 
 if not suc then
     print("ERROR: " .. tostring(conf))

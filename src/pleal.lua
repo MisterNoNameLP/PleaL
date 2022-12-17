@@ -1,12 +1,12 @@
 --[[
-    clua (custom lua) is a custom version of lua. implementing features like += and such. 
-    clua works by comverting clua code unto native lua code. Wich means clua runs on ordenary lua interpreters.
+    pleal (custom lua) is a custom version of lua. implementing features like += and such. 
+    pleal works by comverting pleal code unto native lua code. Wich means pleal runs on ordenary lua interpreters.
 
     Requirements: 
         Interpreter: lua5.1+.
 
 
-    clua Copyright (c) 2022 MisterNoNameLP
+    pleal Copyright (c) 2022 MisterNoNameLP
 
     Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -17,7 +17,7 @@
 
 local version = "v0.2"
 
-local clua = {
+local pleal = {
 	maxInsertingDeepth = 10000,
 }
 
@@ -180,7 +180,7 @@ local function parse(input)
 				log("#")
 				log(output)
 
-				insertingSuc, insertingErr = keepInserting(insertVariables, "]", 3, clua.maxInsertingDeepth)
+				insertingSuc, insertingErr = keepInserting(insertVariables, "]", 3, pleal.maxInsertingDeepth)
 				if insertingSuc == false then
 					return insertingErr
 				end
@@ -203,7 +203,7 @@ local function parse(input)
 
 			cut(pos)
 			if symbol == "\"" or symbol == "'" then
-				return keepInserting(insertVariables, symbol, 2, clua.maxInsertingDeepth)
+				return keepInserting(insertVariables, symbol, 2, pleal.maxInsertingDeepth)
 			elseif symbol == "[" and nextSymbol == "[" then
 				--insertVariables("]")
 			elseif symbol == "[" then
@@ -213,7 +213,7 @@ local function parse(input)
 	end
 
 
-	if conf.clua == false then
+	if conf.pleal == false then
 		return true, conf, input
 	else 
 		local suc, err = keepInserting(insertVariables, nil, 1, 1000)
@@ -242,18 +242,18 @@ local function setLogFunction(func)
 end
 
 
---===== linking local functions to clua table =====--
-clua.version = version
-clua.getVersion = getVersion
+--===== linking local functions to pleal table =====--
+pleal.version = version
+pleal.getVersion = getVersion
 
-clua.parse = parse
-clua.parseFile = parseFile
+pleal.parse = parse
+pleal.parseFile = parseFile
 
-clua.exec = exec
-clua.execFile = execFile
+pleal.exec = exec
+pleal.execFile = execFile
 
-clua.getLogFunction = getLogFunction
-clua.setLogFunction = setLogFunction
+pleal.getLogFunction = getLogFunction
+pleal.setLogFunction = setLogFunction
 
 
-return clua
+return pleal
