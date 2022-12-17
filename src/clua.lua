@@ -15,13 +15,15 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.1"
+local version = "v0.2"
 
 local clua = {
 	maxInsertingDeepth = 10000,
 }
 
 --===== internal variables =====--
+local log = print
+
 local replacePrefixBlacklist = "%\"'[]"
 local allowedVarNameSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_." --string pattern
 
@@ -126,8 +128,8 @@ local function parse(input)
 	end
 
 	local function insertVariables(finisher)
-		print("PARSE_LINE: " .. tostring(finisher))
-		print(input)
+		log("PARSE_LINE: " .. tostring(finisher))
+		log(input)
 
 
 		--look for relevant symbols
@@ -145,20 +147,20 @@ local function parse(input)
 		nextSymbol = input:sub(pos + 1, pos + 1)
 
 		if symbol == finisher then
-			print(1)
+			log(1)
 
 			cut(pos)
 
 			return 1
 		elseif finisher and symbol == replacePrefix then
-			print(2)
+			log(2)
 
 			cut(pos)
 
 			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
 			local varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos)
 
-			--print(varFinishingSymbol)
+			--log(varFinishingSymbol)
 
 			--cut out the var name
 			local varName = input:sub(0, varFinishingPos - 1)
@@ -173,21 +175,21 @@ local function parse(input)
 				
 				cut(1)
 
-				print("### 1 ###")
-				print(input)
-				print("#")
-				print(output)
+				log("### 1 ###")
+				log(input)
+				log("#")
+				log(output)
 
 				insertingSuc, insertingErr = keepInserting(insertVariables, "]", 3, clua.maxInsertingDeepth)
 				if insertingSuc == false then
 					return insertingErr
 				end
 				
-				print("### 2 ###")
-				print(input)
-				print("#")
-				print(output)
-				--print("\n")
+				log("### 2 ###")
+				log(input)
+				log("#")
+				log(output)
+				--log("\n")
 
 				output = output .. ").." .. finisher
 			else
@@ -197,7 +199,7 @@ local function parse(input)
 			end
 
 		else
-			print(3)
+			log(3)
 
 			cut(pos)
 			if symbol == "\"" or symbol == "'" then
@@ -232,6 +234,13 @@ local function parseFile(path)
     end
 end
 
+local function getLogFunction()
+	return log
+end
+local function setLogFunction(func)
+	log = func
+end
+
 
 --===== linking local functions to clua table =====--
 clua.version = version
@@ -242,6 +251,9 @@ clua.parseFile = parseFile
 
 clua.exec = exec
 clua.execFile = execFile
+
+clua.getLogFunction = getLogFunction
+clua.setLogFunction = setLogFunction
 
 
 return clua
