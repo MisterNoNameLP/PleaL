@@ -15,11 +15,9 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.1"
+local version = "v0.0.2d"
 
-local clua = {
-	maxInsertingDeepth = 10000,
-}
+local clua = {}
 
 --===== internal variables =====--
 local replacePrefixBlacklist = "%\"'[]"
@@ -113,17 +111,7 @@ local function parse(input)
 		input = input:sub(pos + 1)
 	end
 
-	local function keepInserting(inserter, symbol, level, maxDeepth)
-		local done 
-		local deepth = 0
-		while done ~= 1 and done ~= true do
-			deepth = deepth + 1
-			if deepth > maxDeepth then
-				return false, "max inserting deepth reached at level: " .. tostring(level)
-			end
-			done = inserter(symbol)
-		end
-	end
+	
 
 	local function insertVariables(finisher)
 		print("PARSE_LINE: " .. tostring(finisher))
@@ -167,8 +155,6 @@ local function parse(input)
 			output = output:sub(0, -2)
 
 			if varFinishingSymbol == "[" then
-				local insertingSuc, insertingErr
-
 				output = output .. finisher .. "..tostring(" .. varName
 				
 				cut(1)
@@ -178,11 +164,12 @@ local function parse(input)
 				print("#")
 				print(output)
 
-				insertingSuc, insertingErr = keepInserting(insertVariables, "]", 3, clua.maxInsertingDeepth)
-				if insertingSuc == false then
-					return insertingErr
+				local done
+				while done ~= 1 and done ~= true do
+					done = insertVariables("]")
 				end
 				
+
 				print("### 2 ###")
 				print(input)
 				print("#")
@@ -200,8 +187,18 @@ local function parse(input)
 			print(3)
 
 			cut(pos)
+
+			--if symbol == "\"" and prevSymbol ~= "\\" or symbol == "'" and prevSymbol ~= "\\" then
 			if symbol == "\"" or symbol == "'" then
-				return keepInserting(insertVariables, symbol, 2, clua.maxInsertingDeepth)
+				local done 
+				local stack = 0
+				while done ~= 1 and done ~= true do
+					stack = stack + 1
+					if stack > 10 then
+						return false, "Stack too big"
+					end
+					done = insertVariables(symbol)
+				end
 			elseif symbol == "[" and nextSymbol == "[" then
 				--insertVariables("]")
 			elseif symbol == "[" then
@@ -210,13 +207,18 @@ local function parse(input)
 		end
 	end
 
-
 	if conf.clua == false then
 		return true, conf, input
 	else 
-		local suc, err = keepInserting(insertVariables, nil, 1, 1000)
-		if suc == false then 
-			return false, err
+		local done, err
+		while done ~= true do
+			if done == false then
+				return false, err
+			end
+
+			print("################")
+			--print(input)
+			done, err = insertVariables()
 		end
 	end
 	return true, conf, output
