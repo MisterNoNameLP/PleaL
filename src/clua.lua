@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.0.1"
+local version = "v0.0.2"
 
 local clua = {}
 
@@ -51,6 +51,10 @@ end
 
 
 --===== main functiosn =====--
+local function getVersion()
+	return version
+end
+
 local function parse(input, replacePrefix, logFuncs)
 	local lineCount = 0	
 	local _, conf
@@ -167,6 +171,9 @@ end
 
 
 --===== linking local functions to clua table =====--
+clua.version = version
+clua.getVersion = getVersion
+
 clua.parse = parse
 clua.parseFile = parseFile
 
