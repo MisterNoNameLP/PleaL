@@ -1,5 +1,6 @@
 local test = "TEST"
 local index = "tbl"
+local t = "t"
 local tbl = {
     t = "TBL TEST",
     tbl = {t = "TBL IN TBL"},
@@ -15,5 +16,5 @@ print("test tbl: $tbl['t']")
 
 print("test tbl: $tbl[test] ") 
 
-print("test tbl: $tbl['$index'][t] ") 
+print("test 'in string $test' tbl: $tbl['$index']['$t'] ") 
 

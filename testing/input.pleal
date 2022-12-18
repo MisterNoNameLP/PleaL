@@ -1,2 +1,9 @@
 
-local test = "variable: $tbl['start $var end'] done"
+local t = [[start $var end]]
+local t = [[start $tbl['indexStart $index indexEnd'] end]]
+local t = "start $tbl[$index] end"
+
+local t = "start $tbl['$test'] end"
+
+local t = "start $tbl[index][index2] end"
+

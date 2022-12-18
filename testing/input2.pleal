@@ -1,0 +1,9 @@
+#?test="TT"
+local test = "variable: \" $test \"  $tbl['start $var end']  'stringgy $var' done"
+
+
+local t2 = [[test $var letters]]
+
+local t3 = "start $tbl['$test'] end"
+local t4 = 'start $tbl["$test"] end'
+local t5 = [[start $tbl["$test"] end]]

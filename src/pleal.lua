@@ -1,6 +1,6 @@
 --[[
-    pleal (custom lua) is a custom version of lua. implementing features like += and such. 
-    pleal works by comverting pleal code unto native lua code. Wich means pleal runs on ordenary lua interpreters.
+    pleal (PleasantLua) is a custom version of lua. Implementing features like a more convinient way of embetting variables into strings as well as things like +=. 
+    pleal works by comverting pleal code unto native lua code. Wich means that pleal runs on ordinary lua interpreters.
 
     Requirements: 
         Interpreter: lua5.1+.
@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.2"
+local version = "v0.3"
 
 local pleal = {
 	maxInsertingDeepth = 10000,
@@ -53,6 +53,155 @@ function len(string) --may gets replaces with utf8 support if needed.
         return 0
     end
 end
+local function loadConfLine(input) --removes the conf line from the input and return it.
+	local _
+	for line in input:gmatch("[^\n]+") do
+		if line:sub(0, 2) == "#?" then 
+			local confLine = line:sub(3)
+			local confInterpreterString = [[
+				local conf = {}
+				local globalMetatable = getmetatable(_G)
+				_G = setmetatable(_G, {__newindex = function(_, index, value) conf[index] = value end})
+			]] .. confLine .. [[
+				_G = setmetatable(_G, globalMetatable)
+				return conf
+			]]
+			local confInterpreterFunc = loadstring(confInterpreterString)
+			if not confInterpreterFunc then
+				return false, "Invalid file conf line"
+			end
+			_, conf = pcall(confInterpreterFunc)
+			--input = input:sub(len(line) + 1) --cut out conf line
+		end
+		break
+	end
+	if type(conf) ~= "table" then
+		conf = {}
+	end
+	return conf
+end
+
+local function keepCalling(func, maxTries, ...) --Call the given function until it returns true or 1.
+	local done 
+	local tries = 0
+	if not maxTries then
+		maxTries = math.huge
+	end
+	while done ~= 1 and done ~= true do
+		tries = tries + 1
+		if tries > maxTries then
+			return false, "max calling tries reached"
+		end
+		done = func(...)
+	end
+end
+
+local function embedVariables(input)
+	local output = ""
+
+	local function cut(pos)
+		output = output .. input:sub(0, pos)
+		input = input:sub(pos + 1)
+	end
+
+	local function embed(finisher)
+		log("PARSE_LINE: " .. tostring(finisher))
+		
+		local symbolPos
+		local symbol
+		local prevSymbol, nextSymbol
+		local opener
+
+		if finisher == "]]" then
+			opener = "[["
+		else
+			opener = finisher
+		end
+	
+		--getting for relevant symbols
+		local function setSymbol()
+			print("####")
+			symbolPos = input:find("[%[%]\"'"..replacePrefix.."]")
+			if not symbolPos then
+				cut(len(input))
+				return true
+			end
+			symbol = input:sub(symbolPos, symbolPos)
+			prevSymbol = input:sub(symbolPos - 1, symbolPos - 1)
+			nextSymbol = input:sub(symbolPos + 1, symbolPos + 1)
+		end
+		if setSymbol() then
+			return true
+		end
+
+		--error prevention 
+
+		--process symbol
+		if symbol == finisher then
+			log(1)
+
+			cut(symbolPos)
+			if prevSymbol ~= "\\" then
+				return 1
+			end
+		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
+			log(2)
+
+			cut(symbolPos)
+
+			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
+			local varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos)
+
+			--cut out the var name
+			local varName = input:sub(0, varFinishingPos - 1)
+			input = input:sub(varFinishingPos)
+			--remove replacePrefix
+			output = output:sub(0, -2)
+
+			if varFinishingSymbol == "[" then
+				local insertingSuc, insertingErr
+				local anotherIndex = true
+
+				output = output .. finisher .. "..tostring(" .. varName
+				cut(1)
+				while anotherIndex do
+					insertingSuc, insertingErr = keepCalling(embed, nil, "]")
+					if insertingSuc == false then
+						return insertingErr
+					elseif setSymbol() then
+						return true
+					end
+					if symbol ~= "[" then
+						anotherIndex = false
+					end
+				end
+				output = output .. ").." .. opener
+			else
+				output = output .. finisher .. "..tostring(" .. varName .. ").." .. opener
+			end
+
+		else
+			log(3)
+
+			cut(symbolPos)
+			if (symbol == "\"" or symbol == "'") and (not finisher or finisher == "]" or finisher == "]]") then
+			--if symbol == "\"" or symbol == "'" then
+				return keepCalling(embed, nil, symbol)
+			elseif symbol == "[" and nextSymbol == "[" and not finisher then
+				return keepCalling(embed, nil, "]]")
+			elseif symbol == "[" then
+
+			end
+		end
+	end
+
+	local suc, err = keepCalling(embed, nil)
+	if suc == false then 
+		return false, err
+	end
+
+	return true, output
+end
 
 
 --===== main functiosn =====--
@@ -64,34 +213,14 @@ local function parse(input)
 	local lineCount = 0	
 	local _, conf
 	local output = ""
-	local replacePrefix
 
 	--=== load conf line ===--
 	do 
-		for line in input:gmatch("[^\n]+") do
-			if line:sub(0, 2) == "#?" then 
-				local confLine = line:sub(3)
-				local confInterpreterString = [[
-					local conf = {}
-					local globalMetatable = getmetatable(_G)
-					_G = setmetatable(_G, {__newindex = function(_, index, value) conf[index] = value end})
-				]] .. confLine .. [[
-					_G = setmetatable(_G, globalMetatable)
-					return conf
-				]]
-				local confInterpreterFunc = loadstring(confInterpreterString)
-
-				if not confInterpreterFunc then
-					return false, "Invalid file conf line!"
-				end
-				_, conf = pcall(confInterpreterFunc)
-				input = input:sub(len(line) + 1) --cut out conf line
-			end
-			break
+		local err
+		conf, err = loadConfLine(input)
+		if not conf then
+			return false, "Could not load conf line", err
 		end
-	end
-	if type(conf) ~= "table" then
-		conf = {}
 	end
 	
 	--=== error checks ===--
@@ -109,121 +238,17 @@ local function parse(input)
 		end
 	end
 
-	--=== parse script ===--
-	local function cut(pos)
-		output = output .. input:sub(0, pos)
-		input = input:sub(pos + 1)
-	end
-
-	local function keepInserting(inserter, symbol, level, maxDeepth)
-		local done 
-		local deepth = 0
-		while done ~= 1 and done ~= true do
-			deepth = deepth + 1
-			if deepth > maxDeepth then
-				return false, "max inserting deepth reached at level: " .. tostring(level)
-			end
-			done = inserter(symbol)
+	--=== embed variables ===--
+	if conf.variableEmbedding ~= false then
+		local suc 
+		suc, output = embedVariables(input)
+		if not suc then
+			return false, "Variable embedding failed", output
 		end
 	end
 
-	local function insertVariables(finisher)
-		log("PARSE_LINE: " .. tostring(finisher))
-		log(input)
-
-
-		--look for relevant symbols
-		local pos = input:find("[%[%]\"'"..replacePrefix.."]")
-		local symbol
-		local prevSymbol, nextSymbol
-		if not pos then
-			cut(len(input))
-			return true
-		end
-
-		--process symbol
-		symbol = input:sub(pos, pos)
-		prevSymbol = input:sub(pos - 1, pos - 1)
-		nextSymbol = input:sub(pos + 1, pos + 1)
-
-		if symbol == finisher then
-			log(1)
-
-			cut(pos)
-
-			return 1
-		elseif finisher and symbol == replacePrefix then
-			log(2)
-
-			cut(pos)
-
-			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
-			local varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos)
-
-			--log(varFinishingSymbol)
-
-			--cut out the var name
-			local varName = input:sub(0, varFinishingPos - 1)
-			input = input:sub(varFinishingPos)
-			--remove replacePrefix
-			output = output:sub(0, -2)
-
-			if varFinishingSymbol == "[" then
-				local insertingSuc, insertingErr
-
-				output = output .. finisher .. "..tostring(" .. varName
-				
-				cut(1)
-
-				log("### 1 ###")
-				log(input)
-				log("#")
-				log(output)
-
-				insertingSuc, insertingErr = keepInserting(insertVariables, "]", 3, pleal.maxInsertingDeepth)
-				if insertingSuc == false then
-					return insertingErr
-				end
-				
-				log("### 2 ###")
-				log(input)
-				log("#")
-				log(output)
-				--log("\n")
-
-				output = output .. ").." .. finisher
-			else
-				--re insert the modified varname
-				--input = finisher .. "..tostring(" .. varName .. ").." .. finisher  .. input
-				output = output .. finisher .. "..tostring(" .. varName .. ").." .. finisher
-			end
-
-		else
-			log(3)
-
-			cut(pos)
-			if symbol == "\"" or symbol == "'" then
-				return keepInserting(insertVariables, symbol, 2, pleal.maxInsertingDeepth)
-			elseif symbol == "[" and nextSymbol == "[" then
-				--insertVariables("]")
-			elseif symbol == "[" then
-
-			end
-		end
-	end
-
-
-	if conf.pleal == false then
-		return true, conf, input
-	else 
-		local suc, err = keepInserting(insertVariables, nil, 1, 1000)
-		if suc == false then 
-			return false, err
-		end
-	end
 	return true, conf, output
 end
-
 local function parseFile(path) 
     local fileContent = readFile(path)
 
