@@ -18,3 +18,8 @@ print("test tbl: $tbl[test] ")
 
 print("test 'in string $test' tbl: $tbl['$index']['$t'] ") 
 
+do 
+    local index = 1
+    local tbl = {content_1 = 3}
+    print("Var is: $tbl['content_$index']")
+end

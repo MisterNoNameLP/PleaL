@@ -10,11 +10,15 @@ pleal.setLogFunctions(print, print, print)
 
 local suc, conf, luaCode
 
+pleal.setConfig({replacementPrefix = "!"})
+
 if args[1] ~= "1" then
     suc, conf, luaCode = pleal.parseFile("input.pleal")
 else
     suc, conf, luaCode = pleal.parseFile("input-final.pleal")
 end
+
+print(conf.replacementPrefix)
 
 if not suc then
     print("ERROR: " .. tostring(conf))

@@ -15,16 +15,19 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.4"
+local version = "0.5"
 
-local pleal = {
-	maxInsertingDeepth = 10000,
-}
+local pleal = {}
 
 --===== internal variables =====--
 local log = print
 local err = log
 local dlog = function() end
+
+local globalConfig = {
+	replacementPrefix = "$",
+	removeConfLine = false,
+}
 
 
 local replacePrefixBlacklist = "%\"'[]"
@@ -74,8 +77,12 @@ local function keepCalling(func, maxTries, ...) --Call the given function until 
 end
 
 --=== conversion functions ===--
-local function loadConfLine(input) --removes the conf line from the input and return it.
-	local _
+local function loadConf(input) --removes the conf line from the input and return it.
+	local conf = {}
+	local _, scriptConf
+	for i, c in pairs(globalConfig) do
+		conf[i] = c
+	end
 	for line in input:gmatch("[^\n]+") do
 		if line:sub(0, 2) == "#?" then 
 			local confLine = line:sub(3)
@@ -91,13 +98,17 @@ local function loadConfLine(input) --removes the conf line from the input and re
 			if not confInterpreterFunc then
 				return false, "Invalid file conf line"
 			end
-			_, conf = pcall(confInterpreterFunc)
+			_, scriptConf = pcall(confInterpreterFunc)
 			--input = input:sub(len(line) + 1) --cut out conf line
 		end
 		break
 	end
-	if type(conf) ~= "table" then
-		conf = {}
+	if type(scriptConf) ~= "table" then
+		return conf
+	else
+		for i, c in pairs(scriptConf) do
+			conf[i] = c
+		end
 	end
 	return conf
 end
@@ -146,6 +157,12 @@ local function embedVariables(input)
 				return 1
 			end
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
+			if prevSymbol == "\\" then
+				input = input:sub(2)
+				cut(symbolPos - 1)
+				return 
+			end
+
 			cut(symbolPos)
 
 			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
@@ -217,6 +234,14 @@ local function setLogFunctions(newLog, newErr, newDlog)
 		dlog = newDlog
 	end
 end
+local function getConfig()
+	return globalConfig
+end
+local function setConfig(conf)
+	for i, c in pairs(conf) do
+		globalConfig[i] = c
+	end
+end
 
 --=== conversion functions ===--
 local function parse(input)
@@ -227,11 +252,18 @@ local function parse(input)
 	do
 		local err
 		log("Load conf line")
-		conf, err = loadConfLine(input)
+		conf, err = loadConf(input)
 		if not conf then
 			err("Could conf line")
 			return false, "Could not load conf line", err
 		end
+	end
+
+	--process conf 
+	if conf.removeConfLine then
+		log("Remove conf line")
+		local confLineEnd = input:find("\n")
+		input = input:sub(confLineEnd)
 	end
 	
 	--error checks
@@ -288,6 +320,9 @@ end
 --===== linking main functions to pleal table =====--
 pleal.version = version
 pleal.getVersion = getVersion
+
+pleal.getConfig = getConfig
+pleal.setConfig = setConfig
 
 pleal.parse = parse
 pleal.parseFile = parseFile
