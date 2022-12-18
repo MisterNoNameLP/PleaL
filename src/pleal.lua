@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "0.5"
+local version = "0.6"
 
 local pleal = {}
 
@@ -27,10 +27,12 @@ local dlog = function() end
 local globalConfig = {
 	replacementPrefix = "$",
 	removeConfLine = false,
+	varNameLimitOpener = "{",
+	varNameLimitFinisher = "}",
 }
 
 
-local replacePrefixBlacklist = "%\"'[]"
+local replacePrefixBlacklist = "%\"'[]{}"
 local allowedVarNameSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_." --string pattern
 
 --===== internal functions =====--
@@ -112,7 +114,7 @@ local function loadConf(input) --removes the conf line from the input and return
 	end
 	return conf
 end
-local function embedVariables(input)
+local function embedVariables(input, conf)
 	local output = ""
 
 	local function cut(pos)
@@ -157,20 +159,24 @@ local function embedVariables(input)
 				return 1
 			end
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
+			local varNameFinishingPosOffset = 0 --used when an varNameLimiter is used.
 			if prevSymbol == "\\" then
 				input = input:sub(2)
 				cut(symbolPos - 1)
 				return 
 			end
-
 			cut(symbolPos)
+			if nextSymbol == conf.varNameLimitOpener then
+				input = input:sub(2)
+				varNameFinishingPosOffset = 1
+			end
 
 			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
 			local varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos)
 
 			--cut out the var name
 			local varName = input:sub(0, varFinishingPos - 1)
-			input = input:sub(varFinishingPos)
+			input = input:sub(varFinishingPos + varNameFinishingPosOffset)
 			--remove replacePrefix
 			output = output:sub(0, -2)
 
@@ -289,7 +295,7 @@ local function parse(input)
 		local suc 
 		log("Embed variables")
 		--embed variables
-		suc, input = embedVariables(input)
+		suc, input = embedVariables(input, conf)
 		if not suc then
 			err("Variable embedding failed")
 			return false, "Variable embedding failed", input

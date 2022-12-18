@@ -20,6 +20,6 @@ print("test 'in string $test' tbl: $tbl['$index']['$t'] ")
 
 do 
     local index = 1
-    local tbl = {content_1 = 3}
-    print("Var is: $tbl['content_$index']")
+    local tbl = {content_1_test = 3}
+    print("Var is: $tbl['content_${index}_test']")
 end
