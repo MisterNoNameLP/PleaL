@@ -4,15 +4,16 @@ local args = {...}
 
 package.path = package.path .. ";../src/?.lua"
 
-local clua = require("pleal")
---local clua = loadfile("../src/clua.lua")()
+local pleal = require("pleal")
+pleal.setLogFunctions(print, print, print)
+--local pleal = loadfile("../src/pleal.lua")()
 
 local suc, conf, luaCode
 
 if args[1] ~= "1" then
-    suc, conf, luaCode = clua.parseFile("input.pleal")
+    suc, conf, luaCode = pleal.parseFile("input.pleal")
 else
-    suc, conf, luaCode = clua.parseFile("input-final.pleal")
+    suc, conf, luaCode = pleal.parseFile("input-final.pleal")
 end
 
 if not suc then

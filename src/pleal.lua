@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "v0.3"
+local version = "v0.4"
 
 local pleal = {
 	maxInsertingDeepth = 10000,
@@ -23,11 +23,15 @@ local pleal = {
 
 --===== internal variables =====--
 local log = print
+local err = log
+local dlog = function() end
+
 
 local replacePrefixBlacklist = "%\"'[]"
 local allowedVarNameSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_." --string pattern
 
 --===== internal functions =====--
+--=== basic functions ===--
 function readFile(path)
 	local file, err = io.open(path, "rb")
 	
@@ -53,6 +57,23 @@ function len(string) --may gets replaces with utf8 support if needed.
         return 0
     end
 end
+local function keepCalling(func, maxTries, ...) --Call the given function until it returns true or 1.
+	local done 
+	local tries = 0
+	if not maxTries then
+		maxTries = math.huge
+	end
+	while done ~= 1 and done ~= true do
+		tries = tries + 1
+		if tries > maxTries then
+			err("keepCalling failed: Max tries reached")
+			return false, "max calling tries reached"
+		end
+		done = func(...)
+	end
+end
+
+--=== conversion functions ===--
 local function loadConfLine(input) --removes the conf line from the input and return it.
 	local _
 	for line in input:gmatch("[^\n]+") do
@@ -80,22 +101,6 @@ local function loadConfLine(input) --removes the conf line from the input and re
 	end
 	return conf
 end
-
-local function keepCalling(func, maxTries, ...) --Call the given function until it returns true or 1.
-	local done 
-	local tries = 0
-	if not maxTries then
-		maxTries = math.huge
-	end
-	while done ~= 1 and done ~= true do
-		tries = tries + 1
-		if tries > maxTries then
-			return false, "max calling tries reached"
-		end
-		done = func(...)
-	end
-end
-
 local function embedVariables(input)
 	local output = ""
 
@@ -105,13 +110,12 @@ local function embedVariables(input)
 	end
 
 	local function embed(finisher)
-		log("PARSE_LINE: " .. tostring(finisher))
-		
 		local symbolPos
 		local symbol
 		local prevSymbol, nextSymbol
 		local opener
 
+		--preparing opener to handle [[]] strings
 		if finisher == "]]" then
 			opener = "[["
 		else
@@ -120,7 +124,6 @@ local function embedVariables(input)
 	
 		--getting for relevant symbols
 		local function setSymbol()
-			print("####")
 			symbolPos = input:find("[%[%]\"'"..replacePrefix.."]")
 			if not symbolPos then
 				cut(len(input))
@@ -138,15 +141,11 @@ local function embedVariables(input)
 
 		--process symbol
 		if symbol == finisher then
-			log(1)
-
 			cut(symbolPos)
 			if prevSymbol ~= "\\" then
 				return 1
 			end
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
-			log(2)
-
 			cut(symbolPos)
 
 			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
@@ -181,8 +180,6 @@ local function embedVariables(input)
 			end
 
 		else
-			log(3)
-
 			cut(symbolPos)
 			if (symbol == "\"" or symbol == "'") and (not finisher or finisher == "]" or finisher == "]]") then
 			--if symbol == "\"" or symbol == "'" then
@@ -205,69 +202,90 @@ end
 
 
 --===== main functiosn =====--
+--=== basic functions ===--
 local function getVersion()
 	return version
 end
+local function getLogFunctions()
+	return log, err, dlog
+end
+local function setLogFunctions(newLog, newErr, newDlog)
+	assert(type(log) == "function", "Tried to set an invalid log function")
+	log = newLog
+	err = pa(err, log)
+	if newDlog then
+		dlog = newDlog
+	end
+end
 
+--=== conversion functions ===--
 local function parse(input)
 	local lineCount = 0	
 	local _, conf
-	local output = ""
 
-	--=== load conf line ===--
-	do 
+	--load conf line
+	do
 		local err
+		log("Load conf line")
 		conf, err = loadConfLine(input)
 		if not conf then
+			err("Could conf line")
 			return false, "Could not load conf line", err
 		end
 	end
 	
-	--=== error checks ===--
+	--error checks
 	replacePrefix = pa(conf.replacePrefix, "$")
 	if type(replacePrefix) ~= "string" then
+		err("Invalid replacePrefix")
 		return false, "Invalid replacePrefix."
 	end
 	if len(replacePrefix) > 1 then
+		err("replacePrefix is too long. Only a 1 char long prefix is allowed")
 		return false, "replacePrefix is too long. Only a 1 char long prefix is allowed."
 	end
 	for c = 0, len(replacePrefixBlacklist) do
 		local blacklistedSymbol = replacePrefixBlacklist:sub(c, c)
 		if replacePrefix == blacklistedSymbol then
+			err("replacePrefix (" .. replacePrefix .. ") is not allowed")
 			return false, "replacePrefix (" .. replacePrefix .. ") is not allowed"
 		end
 	end
 
-	--=== embed variables ===--
+	--embed variables
 	if conf.variableEmbedding ~= false then
 		local suc 
-		suc, output = embedVariables(input)
+		log("Embed variables")
+		--embed variables
+		suc, input = embedVariables(input)
 		if not suc then
-			return false, "Variable embedding failed", output
+			err("Variable embedding failed")
+			return false, "Variable embedding failed", input
 		end
+	else
+		log("Variable embedding disabled per conf line")
 	end
 
-	return true, conf, output
+
+	--finishing up
+	log("Finishing up")
+
+	return true, conf, input
 end
 local function parseFile(path) 
     local fileContent = readFile(path)
 
     if not fileContent then
+		err("Tried to parse non existing file")
         return false, "File not found"
     else
+		log("Parse: " .. path)
         return parse(fileContent)
     end
 end
 
-local function getLogFunction()
-	return log
-end
-local function setLogFunction(func)
-	log = func
-end
 
-
---===== linking local functions to pleal table =====--
+--===== linking main functions to pleal table =====--
 pleal.version = version
 pleal.getVersion = getVersion
 
@@ -277,8 +295,8 @@ pleal.parseFile = parseFile
 pleal.exec = exec
 pleal.execFile = execFile
 
-pleal.getLogFunction = getLogFunction
-pleal.setLogFunction = setLogFunction
+pleal.getLogFunctions = getLogFunctions
+pleal.setLogFunctions = setLogFunctions
 
 
 return pleal
