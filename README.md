@@ -5,7 +5,7 @@ The most comprehensible new syntax possibilities are probably `++`, `--`, `+=` a
 For more information about the expanded syntax please visit the [wiki](WIKI_LINK).
 
 # How it works
-Pleal works by converting pleal code into native lua code, so it can be run in any ordinary lua interpreter.  
+Pleal works by converting PleaL code into native lua code, so it can be run in any ordinary lua interpreter.  
 It is written in pure lua and has no need for additional libraries or C bindings.
 
 # Compatibility
@@ -16,7 +16,7 @@ At the moment only the [variable embedding](https://github.com/MisterNoNameLP/pl
 
 ### Pleal script compatility
 After the v1 release there will be no compatibility breaking updates unless a new major version gets released.  
-Until then new releases will often break the pleal API, but most likley not the compatibility of pleal script itself.
+Until then new releases will often break the PleaL API, but most likley not the compatibility of PleaL script itself.
 
 # Versioning 
 Pleal uses [Semantic Versioning 2.0.0](https://semver.org/).  

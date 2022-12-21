@@ -15,20 +15,21 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "0.6"
+local version = "0.6.1"
 
 local pleal = {}
 
 --===== internal variables =====--
 local log = print
 local err = log
+local warn = log
 local dlog = function() end
 
 local globalConfig = {
 	replacementPrefix = "$",
 	removeConfLine = false,
-	varNameLimitOpener = "{",
-	varNameLimitFinisher = "}",
+	varNameCapsuleOpener = "{",
+	varNameCapsuleFinisher = "}",
 }
 
 
@@ -159,16 +160,16 @@ local function embedVariables(input, conf)
 				return 1
 			end
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
-			local varNameFinishingPosOffset = 0 --used when an varNameLimiter is used.
+			local varNameCapsuleIsUsed = false
 			if prevSymbol == "\\" then
 				input = input:sub(2)
 				cut(symbolPos - 1)
 				return 
 			end
 			cut(symbolPos)
-			if nextSymbol == conf.varNameLimitOpener then
+			if nextSymbol == conf.varNameCapsuleOpener then
 				input = input:sub(2)
-				varNameFinishingPosOffset = 1
+				varNameCapsuleIsUsed = true
 			end
 
 			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
@@ -176,7 +177,13 @@ local function embedVariables(input, conf)
 
 			--cut out the var name
 			local varName = input:sub(0, varFinishingPos - 1)
-			input = input:sub(varFinishingPos + varNameFinishingPosOffset)
+			input = input:sub(varFinishingPos)
+			--remove var name cabsule closer
+			if varNameCapsuleIsUsed and input:sub(0, 1) == conf.varNameCapsuleFinisher then
+				input = input:sub(2)
+			elseif varNameCapsuleIsUsed then
+				warn("Opened var name capsule is not closed at line: " .. tostring(select(2, output:gsub("\n", "\n")) + 1))
+			end
 			--remove replacePrefix
 			output = output:sub(0, -2)
 
@@ -201,7 +208,6 @@ local function embedVariables(input, conf)
 			else
 				output = output .. finisher .. "..tostring(" .. varName .. ").." .. opener
 			end
-
 		else
 			cut(symbolPos)
 			if (symbol == "\"" or symbol == "'") and (not finisher or finisher == "]" or finisher == "]]") then
@@ -224,7 +230,7 @@ local function embedVariables(input, conf)
 end
 
 
---===== main functiosn =====--
+--===== main functions =====--
 --=== basic functions ===--
 local function getVersion()
 	return version
@@ -232,9 +238,12 @@ end
 local function getLogFunctions()
 	return log, err, dlog
 end
-local function setLogFunctions(newLog, newErr, newDlog)
-	assert(type(log) == "function", "Tried to set an invalid log function")
+local function setLogFunctions(newLog, newWarn, newErr, newDlog)
+	if type(newLog) ~= "function" then
+		log = function() end
+	end
 	log = newLog
+	warn = pa(warn, log)
 	err = pa(err, log)
 	if newDlog then
 		dlog = newDlog
@@ -327,6 +336,9 @@ end
 pleal.version = version
 pleal.getVersion = getVersion
 
+pleal.getLogFunctions = getLogFunctions
+pleal.setLogFunctions = setLogFunctions
+
 pleal.getConfig = getConfig
 pleal.setConfig = setConfig
 
@@ -335,9 +347,6 @@ pleal.parseFile = parseFile
 
 pleal.exec = exec
 pleal.execFile = execFile
-
-pleal.getLogFunctions = getLogFunctions
-pleal.setLogFunctions = setLogFunctions
 
 
 return pleal
