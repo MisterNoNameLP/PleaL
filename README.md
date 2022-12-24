@@ -10,9 +10,9 @@ The PleaL transpiler is written in pure lua and has no need for additional libra
 
 # Compatibility
 ### Lua code compatibility
-Pleal is basically compatible with any lua code/library. It is an expansion of the lua syntax and should never ever reduce the possibilities you have.
+PleaL is basically compatible with any lua code/library. It is an expansion of the lua syntax and should never ever reduce the possibilities you have.
 
-At the moment only the [variable embedding](https://github.com/MisterNoNameLP/pleal/wiki/Syntax#variable-embedding) could technically break scripts if strings are containing the replacement prefix symbol. But this problem can easly be fixed by changing the [configuration](https://github.com/MisterNoNameLP/pleal/wiki/Configuration) or by escaping the symbol using `\`.
+At the moment only the [variable embedding](https://github.com/MisterNoNameLP/pleal/wiki/Syntax#variable-embedding) could technically break scripts if strings are containing the embedding prefix symbol. But this problem can easly be fixed by changing the [configuration](https://github.com/MisterNoNameLP/pleal/wiki/Configuration) or by escaping the symbol using `\`.
 
 ### Pleal script compatility
 After the v1 release there will be no compatibility breaking updates unless a new major version gets released.  
