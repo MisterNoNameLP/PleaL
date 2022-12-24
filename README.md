@@ -20,10 +20,10 @@ Until then new releases will often break the PleaL API, but most likley not the 
 
 # Versioning 
 Pleal uses [Semantic Versioning 2.0.0](https://semver.org/).  
-With the exception of `-dev` versions, wich are indicating a development version upon the given version. So `v1.2-dev` > `v1.2`.
+With the exception of `-dev` versions, wich are indicating a development versions upon the given version. So `v1.2-dev` > `v1.2`.
 
 # Licensing
-PleaL is currently licsences under the MIT license. Altough this can chage to the GPLv3 at some point.
+PleaL is currently licensed under the MIT license. Altough this can chage to the GPLv3 at some point.
 
 MIT License
 
