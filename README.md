@@ -1,12 +1,12 @@
-Pleal (PleasandLua) is a customised version of the [lua language](https://lua.org).  
+PleaL (PleasandLua) is a customised version of the [lua language](https://lua.org).  
 
-It aims to make coding in lua a more pleasant experience by expalnding the lua syntax, while keeping the original syntax intact. If you can write lua you can write pleal!  
+It aims to make coding in lua a more pleasant experience by expalnding the lua syntax, while keeping the original syntax intact. If you can write lua you can write PleaL as well!  
 The most comprehensible new syntax possibilities are probably `++`, `--`, `+=` and `-=` (not implemented yet). But there is more as well.  
-For more information about the expanded syntax please visit the [wiki](WIKI_LINK).
+For more information about the expanded syntax is avaiable in the [wiki](https://github.com/MisterNoNameLP/pleal/wiki/Syntax).
 
 # How it works
-Pleal works by converting PleaL code into native lua code, so it can be run in any ordinary lua interpreter.  
-It is written in pure lua and has no need for additional libraries or C bindings.
+It works by converting PleaL code into native lua code, so it can be run in any ordinary lua5.1+ interpreter.  
+The PleaL transpiler is written in pure lua and has no need for additional libraries or C bindings. 
 
 # Compatibility
 ### Lua code compatibility
