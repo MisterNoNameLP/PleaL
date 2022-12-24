@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "0.6.1"
+local version = "0.6.2"
 
 local pleal = {}
 
@@ -259,7 +259,7 @@ local function setConfig(conf)
 end
 
 --=== conversion functions ===--
-local function parse(input)
+local function transpile(input)
 	local lineCount = 0	
 	local _, conf
 
@@ -319,15 +319,15 @@ local function parse(input)
 
 	return true, conf, input
 end
-local function parseFile(path) 
+local function transpileFile(path) 
     local fileContent = readFile(path)
 
     if not fileContent then
-		err("Tried to parse non existing file")
+		err("Tried to transpile non existing file")
         return false, "File not found"
     else
-		log("Parse: " .. path)
-        return parse(fileContent)
+		log("transpile: " .. path)
+        return transpile(fileContent)
     end
 end
 
@@ -342,8 +342,8 @@ pleal.setLogFunctions = setLogFunctions
 pleal.getConfig = getConfig
 pleal.setConfig = setConfig
 
-pleal.parse = parse
-pleal.parseFile = parseFile
+pleal.transpile = transpile
+pleal.transpileFile = transpileFile
 
 pleal.exec = exec
 pleal.execFile = execFile

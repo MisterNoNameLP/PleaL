@@ -1,9 +1,0 @@
-#?rule1=1; rule2 = "test rule 2";
-
-local var = "VALUE"
-
-local str = "var: $var"
-
-local anotherVar = 'ANOTHER VALUE'
-
-print(str)
