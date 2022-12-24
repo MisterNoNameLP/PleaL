@@ -1,0 +1,48 @@
+#!/bin/lua
+
+--[[
+    This is an all-in-one script to execute PleaL scripts from the command line.
+    This script is automatically generatet wich results in pretty ugly and confusing formatting.
+    If you want to edit or view this script please consider visiting the GitHub repository. There you get the project in a more developer friendly folder structure.
+    
+    https://github.com/MisterNoNameLP/PleaL
+]]
+
+--[[
+[LICENSE]
+]]
+
+local executionEnvironment = {loadedLibs = {}}
+
+do --ut
+    local function tmp()
+        [UT]
+    end
+    executionEnvironment.loadedLibs.UT = tmp()
+end
+
+do --argparse
+    local function tmp()
+        [argparse]
+    end
+    executionEnvironment.loadedLibs.argparse = tmp()
+end
+
+do --plealTranspiler
+    local function tmp()
+        [plealTranspilerAPI]
+    end
+    executionEnvironment.loadedLibs.plealTranspilerAPI = tmp()
+end
+
+local function require(path)
+    if executionEnvironment.loadedLibs[path] then
+        return executionEnvironment.loadedLibs[path]
+    else
+        error("Could not require '" .. path .. "'. It seems to not be included in this all in one script.")
+    end
+end
+
+[executionScript]
+
+
