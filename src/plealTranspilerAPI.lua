@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "0.7"
+local version = "0.7.2"
 
 local pleal = {}
 
@@ -27,7 +27,7 @@ local dlog = function() end
 
 local globalConfig = {
 	replacementPrefix = "$",
-	removeConfLine = false,
+	removeConfLine = true,
 	varNameCapsuleOpener = "{",
 	varNameCapsuleFinisher = "}",
 }
@@ -77,6 +77,33 @@ local function keepCalling(func, maxTries, ...) --Call the given function until 
 		end
 		done = func(...)
 	end
+end
+local function executeLuaCode(luaCode, ...)
+	local unpackFunction, loadFunction
+	local loadingError, loadedFunction, executionResults 
+
+	-- lua backward compatibility
+	if unpack then
+		unpackFunction = unpack
+	else
+		unpackFunction = table.unpack
+	end
+	if loadstring then
+		loadFunction = loadstring
+	else
+		loadFunction = load
+	end
+
+	loadedFunction, loadingError = loadFunction(luaCode)
+	if type(loadedFunction) ~= "function" then
+		err("Could not load script: " .. tostring(loadingError))
+		return false, "Could not load script", loadingError
+	end
+	executionResults = {xpcall(loadedFunction, debug.traceback, ...)}
+	if not executionResults[1] then
+		err("Could not execute script: " .. executionResults[2])
+	end
+	return unpackFunction(executionResults)
 end
 
 --=== conversion functions ===--
@@ -270,10 +297,10 @@ local function transpile(input, note)
 	end
 
 	--process conf 
-	if conf.removeConfLine then
+	if conf.removeConfLine and input:sub(0, 2) == "#!" or input:sub(0, 2) == "#?" then
 		log("Remove conf line")
 		local confLineEnd = input:find("\n")
-		input = input:sub(confLineEnd)
+		input = input:sub(confLineEnd + 1)
 	end
 	
 	--error checks
@@ -331,47 +358,25 @@ local function execute(script, ...)
 		err("Invalid script given")
 		return false, "Invalid script"
 	else
-		local unpackFunction, loadFunction
 		local transpileSuccess, conf, luaCode
-		local loadingError, loadedFunction, executionResults 
-		-- lua backward compatibility
-		if unpack then
-			unpackFunction = unpack
-		else
-			unpackFunction = table.unpack
-		end
-		if loadstring then
-			loadFunction = loadstring
-		else
-			loadFunction = load
-		end
 		-- transpiling and loading the script
 		transpileSuccess, conf, luaCode = transpile(script)
 		if not transpileSuccess then
 			err("Could not transpile script")
 			return false, "Could not transpile", conf, luaCode
 		end
-		loadedFunction, loadingError = loadFunction(luaCode)
-		if type(loadedFunction) ~= "function" then
-			err("Could not load script: " .. tostring(loadingError))
-			return false, "Could not load script", loadingError
-		end
 		--executing the script
 		log("Exec script")
-		executionResults = {xpcall(loadedFunction, debug.traceback, ...)}
-		if not executionResults[1] then
-			err("Could not execute script: " .. executionResults[2])
-		end
-		return unpackFunction(executionResults)
+		return executeLuaCode(luaCode, ...)
 	end
 end
-local function executeFile(path)
+local function executeFile(path, ...)
 	local suc, conf, luaCode = transpileFile(path)
 	if not suc then
 		err("Could not execute file: " .. tostring(path) .. " (" .. tostring(luaCode) .. ")")
 		return false, "Could not execute file: " .. tostring(luaCode)
 	else
-		return execute(luaCode)
+		return executeLuaCode(luaCode, ...)
 	end
 end
 

@@ -5,7 +5,7 @@
 
     https://github.com/MisterNoNameLP/PleaL#building
 ]]
-local version = "0.1"
+local version = "0.1.2"
 
 --===== local vars =====--
 package.path = package.path .. ";src/?.lua;src/thirdParty/?.lua"
@@ -57,6 +57,7 @@ end
 
 pleal.setLogFunctions({
     log = function() end, --disableing transpiler logs.
+    --log = print, --debug
     err = function(...)
         print(...)
         os.exit(1)
@@ -84,4 +85,4 @@ table.insert(searchersTable, function(module)
     end
 end)
 --===== execute PleaL script =====--
-pleal.executeFile(args.script)
+pleal.executeFile(args.script, ...)
