@@ -18,9 +18,11 @@ After the v1 release there will be no compatibility breaking updates unless a ne
 Until then new releases will often break the PleaL API, but most likley not the compatibility of PleaL script itself.
 
 # Instalation
-At firts, lua 5.2+ or LuaJIT have to be installed. How to do that depends on the operating system and the distribution used.
-### Linux
-To install PleaL, the [PleaL runner](https://github.com/MisterNoNameLP/PleaL/blob/main/building/release/pleal) have to be put in an folder included in your $PATH. PleaL scripts then can be executet by calling `pleal SCRIPT.pleal`.
+## Linux
+Even though PleaL itself is lua5.1 compatible, the PleaL runner can only be executed at lua5.2+ and LuaJIT.
+So lua5.2+ or LuaJIT have to be installed at your system. How to do that depends on the distribution.
+
+To works with PleaL, the [PleaL runner](https://github.com/MisterNoNameLP/PleaL/blob/main/building/release/pleal) have to be put in an folder included in your $PATH. PleaL scripts then can be executet by calling `pleal SCRIPT.pleal`.
 
 # Versioning 
 Pleal uses [Semantic Versioning 2.0.0](https://semver.org/).  
