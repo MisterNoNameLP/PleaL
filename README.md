@@ -1,11 +1,10 @@
 PleaL (PleasandLua) is a customised version of the [lua language](https://lua.org).  
 
-It aims to make coding in lua a more pleasant experience by expalnding the lua syntax, while keeping the original syntax intact. If you can write lua you can write PleaL as well!  
-The most comprehensible new syntax possibilities are probably `++`, `--`, `+=` and `-=` (not implemented yet). But there is more as well.  
+It aims to make coding in lua a more pleasant experience by expanding the lua syntax, while keeping the original syntax intact. If you can write lua you can write PleaL as well!  
 For more information about the expanded syntax is avaiable in the [wiki](https://github.com/MisterNoNameLP/pleal/wiki/Syntax).
 
 # How it works
-It works by converting PleaL code into native lua code, so it can be run in any ordinary lua5.1+ interpreter.  
+It works by converting PleaL code into native lua code, so it can be run in any ordinary lua5.1+ or LuaJIT interpreter.  
 The PleaL transpiler is written in pure lua and has no need for additional libraries or C bindings. 
 
 # Compatibility
@@ -17,6 +16,11 @@ At the moment only the [variable embedding](https://github.com/MisterNoNameLP/pl
 ### Pleal script compatility
 After the v1 release there will be no compatibility breaking updates unless a new major version gets released.  
 Until then new releases will often break the PleaL API, but most likley not the compatibility of PleaL script itself.
+
+# Instalation
+At firts, lua 5.2+ or LuaJIT have to be installed. How to do that depends on the operating system and the distribution used.
+### Linux
+To install PleaL, the [PleaL runner](https://github.com/MisterNoNameLP/PleaL/blob/main/building/release/pleal) have to be put in an folder included in your $PATH. PleaL scripts then can be executet by calling `pleal SCRIPT.pleal`.
 
 # Versioning 
 Pleal uses [Semantic Versioning 2.0.0](https://semver.org/).  
