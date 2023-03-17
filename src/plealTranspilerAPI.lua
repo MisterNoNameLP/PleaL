@@ -15,7 +15,7 @@
     THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ]]
 
-local version = "0.6.3"
+local version = "0.7"
 
 local pleal = {}
 
@@ -238,16 +238,11 @@ end
 local function getLogFunctions()
 	return log, err, dlog
 end
-local function setLogFunctions(newLog, newWarn, newErr, newDlog)
-	if type(newLog) ~= "function" then
-		log = function() end
-	end
-	log = newLog
-	warn = pa(warn, log)
-	err = pa(err, log)
-	if newDlog then
-		dlog = newDlog
-	end
+local function setLogFunctions(logFunctions)
+	log = pa(logFunctions.log, log, function() end)
+	warn = pa(logFunctions.warn, warn, function() end)
+	err = pa(logFunctions.err, err, function() end)
+	dlog = pa(logFunctions.dlog, dlog, function() end)
 end
 local function getConfig()
 	return globalConfig
@@ -259,7 +254,7 @@ local function setConfig(conf)
 end
 
 --=== conversion functions ===--
-local function transpile(input)
+local function transpile(input, note)
 	local lineCount = 0	
 	local _, conf
 
@@ -313,22 +308,71 @@ local function transpile(input)
 		log("Variable embedding disabled per conf line")
 	end
 
-
 	--finishing up
 	log("Finishing up")
+	if note then
+		input = "--[[" .. tostring(note) .. "]]" .. input
+	end
 
 	return true, conf, input
 end
 local function transpileFile(path) 
     local fileContent = readFile(path)
-
     if not fileContent then
 		err("Tried to transpile non existing file")
         return false, "File not found"
     else
 		log("transpile: " .. path)
-        return transpile(fileContent)
+        return transpile(fileContent, path)
     end
+end
+local function execute(script, ...)
+	if type(script) ~= "string" then
+		err("Invalid script given")
+		return false, "Invalid script"
+	else
+		local unpackFunction, loadFunction
+		local transpileSuccess, conf, luaCode
+		local loadingError, loadedFunction, executionResults 
+		-- lua backward compatibility
+		if unpack then
+			unpackFunction = unpack
+		else
+			unpackFunction = table.unpack
+		end
+		if loadstring then
+			loadFunction = loadstring
+		else
+			loadFunction = load
+		end
+		-- transpiling and loading the script
+		transpileSuccess, conf, luaCode = transpile(script)
+		if not transpileSuccess then
+			err("Could not transpile script")
+			return false, "Could not transpile", conf, luaCode
+		end
+		loadedFunction, loadingError = loadFunction(luaCode)
+		if type(loadedFunction) ~= "function" then
+			err("Could not load script: " .. tostring(loadingError))
+			return false, "Could not load script", loadingError
+		end
+		--executing the script
+		log("Exec script")
+		executionResults = {xpcall(loadedFunction, debug.traceback, ...)}
+		if not executionResults[1] then
+			err("Could not execute script: " .. executionResults[2])
+		end
+		return unpackFunction(executionResults)
+	end
+end
+local function executeFile(path)
+	local suc, conf, luaCode = transpileFile(path)
+	if not suc then
+		err("Could not execute file: " .. tostring(path) .. " (" .. tostring(luaCode) .. ")")
+		return false, "Could not execute file: " .. tostring(luaCode)
+	else
+		return execute(luaCode)
+	end
 end
 
 
@@ -345,8 +389,8 @@ pleal.setConfig = setConfig
 pleal.transpile = transpile
 pleal.transpileFile = transpileFile
 
-pleal.exec = exec
-pleal.execFile = execFile
+pleal.execute = execute
+pleal.executeFile = executeFile
 
 
 return pleal
