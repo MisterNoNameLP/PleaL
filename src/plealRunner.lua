@@ -1,9 +1,25 @@
 --[[
     This script makes it possible to easly axecute PleaL script from the command line.
     It is supposed to be shippen within an all-in-one script wich is createt automatically. But it can be executet in its pure form as well.
-    For more information see the official PleaL readme.
 
-    https://github.com/MisterNoNameLP/PleaL#building
+    Requirements: 
+        Interpreter: lua5.2+ or LuaJIT
+
+
+    Copyright (C) 2023  MisterNoNameLP
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 local version = "0.1.4"
 local isDev = true

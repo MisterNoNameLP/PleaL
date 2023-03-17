@@ -30,7 +30,7 @@ end
 
 do --plealTranspiler
     local function tmp()
-        [plealTranspilerAPI]
+        [plealRunner]
     end
     executionEnvironment.loadedLibs.plealTranspilerAPI = tmp()
 end

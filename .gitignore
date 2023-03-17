@@ -1,2 +1,6 @@
 wiki
 testing/
+
+*.org
+*.bak
+*.dis
