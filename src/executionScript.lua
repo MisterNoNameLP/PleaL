@@ -5,10 +5,13 @@
 
     https://github.com/MisterNoNameLP/PleaL#building
 ]]
-local version = "0.1.3"
+local version = "0.1.4"
+local isDev = true
 
 --===== local vars =====--
---package.path = package.path .. ";src/?.lua;src/thirdParty/?.lua"
+if isDev then
+    package.path = package.path .. ";src/?.lua;src/thirdParty/?.lua"
+end
 _G.package.ppath = string.gsub(package.path, "%.lua", ".pleal") --pleal path
 local ut = require("UT")
 local pleal = require("plealTranspilerAPI")
@@ -71,6 +74,14 @@ _G.loadfile = function(path)
         return org.loadfile(path)
     else
         return loadFunction(select(3, pleal.transpileFile(path)))
+    end
+end
+_G.dofile = function(path)
+    local _, _, ending = ut.seperatePath(path)
+    if ending ~= ".pleal" then
+        return org.loadfile(path)
+    else
+        return loadFunction(select(3, pleal.transpileFile(path)))()
     end
 end
 
