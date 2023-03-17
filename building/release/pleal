@@ -2206,10 +2206,10 @@ end
 
     https://github.com/MisterNoNameLP/PleaL#building
 ]]
-local version = "0.1.2"
+local version = "0.1.3"
 
 --===== local vars =====--
-package.path = package.path .. ";src/?.lua;src/thirdParty/?.lua"
+--package.path = package.path .. ";src/?.lua;src/thirdParty/?.lua"
 _G.package.ppath = string.gsub(package.path, "%.lua", ".pleal") --pleal path
 local ut = require("UT")
 local pleal = require("plealTranspilerAPI")
