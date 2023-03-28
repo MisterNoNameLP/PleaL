@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.7.2"
+local version = "0.7.3"
 
 local pleal = {}
 
@@ -196,8 +196,9 @@ local function embedVariables(input, conf)
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
 			local varNameCapsuleIsUsed = false
 			if prevSymbol == "\\" then
+				cut(symbolPos - 2)
 				input = input:sub(2)
-				cut(symbolPos - 1)
+				cut(1)
 				return 
 			end
 			cut(symbolPos)
