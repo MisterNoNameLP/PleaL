@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.7.4"
+local version = "0.7.5"
 
 local pleal = {}
 
@@ -37,6 +37,7 @@ local globalConfig = {
 	removeConfLine = true,
 	varNameCapsuleOpener = "{",
 	varNameCapsuleFinisher = "}",
+	dumpScripts = false,
 }
 
 
@@ -89,7 +90,7 @@ local function executeLuaCode(luaCode, ...)
 	local unpackFunction, loadFunction
 	local loadingError, loadedFunction, executionResults 
 
-	-- lua backward compatibility
+	-- lua backwards compatibility
 	if unpack then
 		unpackFunction = unpack
 	else
@@ -347,6 +348,10 @@ local function transpile(input, note)
 	log("Finishing up")
 	if note then
 		input = "--[[" .. tostring(note) .. "]]" .. input
+	end
+
+	if globalConfig.dumpScripts then
+		dlog("vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. input .. "\n^^^^^^^ PLEAL DUMP ENDING ^^^^^^^")
 	end
 
 	return true, conf, input

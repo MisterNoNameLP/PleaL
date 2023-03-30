@@ -21,7 +21,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local version = "0.1.4"
+local version = "0.1.5"
 local isDev = true
 
 --===== local vars =====--
@@ -46,8 +46,10 @@ do
         print("PleaL transpiler: v" .. pleal.getVersion())
         os.exit(0)
     end)
+	 parser:flag("-D --dump", "Dumps every transpiles script to the console before executing it."):target("dump")
 
     parser:argument("script", "A PleaL scrip to execute"):target("script")
+	 
 
     args = parser:parse()
 end
@@ -77,11 +79,20 @@ end
 pleal.setLogFunctions({
     log = function() end, --disableing transpiler logs.
     --log = print, --debug
+	 dlog = print,
     err = function(...)
         print(...)
         os.exit(1)
     end,
 })
+
+do --setting pleal conf
+	local confTable = {}
+	if args.dump then
+		confTable.dumpScripts = true
+	end
+	pleal.setConfig(confTable)
+end
 
 --=== replace / extend buildin functions ===--
 _G.loadfile = function(path)
