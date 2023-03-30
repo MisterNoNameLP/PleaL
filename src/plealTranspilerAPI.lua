@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.7.5"
+local version = "0.8"
 
 local pleal = {}
 
@@ -38,6 +38,7 @@ local globalConfig = {
 	varNameCapsuleOpener = "{",
 	varNameCapsuleFinisher = "}",
 	dumpScripts = false,
+	dumpLineIndicators = false,
 }
 
 
@@ -351,7 +352,20 @@ local function transpile(input, note)
 	end
 
 	if globalConfig.dumpScripts then
-		dlog("vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. input .. "\n^^^^^^^ PLEAL DUMP ENDING ^^^^^^^")
+		local toDump
+		if globalConfig.dumpLineIndicators then
+			toDump = ""
+			local lineCounter = 1
+			for line in input:gmatch("[^\n]*") do
+				toDump = toDump .. "# " .. tostring(lineCounter) .. " | " .. line .. "\n"
+				lineCounter = lineCounter + 1
+			end
+			toDump = toDump:sub(0, -2)
+		else
+			toDump = input
+		end
+
+		dlog("    vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. toDump .. "\n       ^^^^^^^ PLEAL DUMP END ^^^^^^^\n")
 	end
 
 	return true, conf, input

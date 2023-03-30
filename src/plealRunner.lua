@@ -21,7 +21,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local version = "0.1.5"
+local version = "0.2"
 local isDev = true
 
 --===== local vars =====--
@@ -46,7 +46,8 @@ do
         print("PleaL transpiler: v" .. pleal.getVersion())
         os.exit(0)
     end)
-	 parser:flag("-D --dump", "Dumps every transpiles script to the console before executing it."):target("dump")
+	 parser:flag("-D --dump", "Dumps every transpiled script to the console."):target("dump")
+	 parser:flag("-L --no-dump-line-indicators", "Do not add line indicators to dumped scripts."):target("noDumpLineIndicators")
 
     parser:argument("script", "A PleaL scrip to execute"):target("script")
 	 
@@ -90,6 +91,9 @@ do --setting pleal conf
 	local confTable = {}
 	if args.dump then
 		confTable.dumpScripts = true
+	end
+	if args.noDumpLineIndicators == nil then
+		confTable.dumpLineIndicators = true --false by default
 	end
 	pleal.setConfig(confTable)
 end

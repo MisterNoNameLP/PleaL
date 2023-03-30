@@ -2016,7 +2016,7 @@ do --plealTranspiler
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.7.5"
+local version = "0.8"
 
 local pleal = {}
 
@@ -2032,6 +2032,7 @@ local globalConfig = {
 	varNameCapsuleOpener = "{",
 	varNameCapsuleFinisher = "}",
 	dumpScripts = false,
+	dumpLineIndicators = false,
 }
 
 
@@ -2345,7 +2346,20 @@ local function transpile(input, note)
 	end
 
 	if globalConfig.dumpScripts then
-		dlog("vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. input .. "\n^^^^^^^ PLEAL DUMP ENDING ^^^^^^^")
+		local toDump
+		if globalConfig.dumpLineIndicators then
+			toDump = ""
+			local lineCounter = 1
+			for line in input:gmatch("[^\n]*") do
+				toDump = toDump .. "# " .. tostring(lineCounter) .. " | " .. line .. "\n"
+				lineCounter = lineCounter + 1
+			end
+			toDump = toDump:sub(0, -2)
+		else
+			toDump = input
+		end
+
+		dlog("    vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. toDump .. "\n       ^^^^^^^ PLEAL DUMP END ^^^^^^^\n")
 	end
 
 	return true, conf, input
@@ -2441,7 +2455,7 @@ end
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local version = "0.1.5"
+local version = "0.2"
 local isDev = true
 
 --===== local vars =====--
@@ -2466,7 +2480,8 @@ do
         print("PleaL transpiler: v" .. pleal.getVersion())
         os.exit(0)
     end)
-	 parser:flag("-D --dump", "Dumps every transpiles script to the console before executing it."):target("dump")
+	 parser:flag("-D --dump", "Dumps every transpiled script to the console."):target("dump")
+	 parser:flag("-L --no-dump-line-indicators", "Do not add line indicators to dumped scripts."):target("noDumpLineIndicators")
 
     parser:argument("script", "A PleaL scrip to execute"):target("script")
 	 
@@ -2510,6 +2525,9 @@ do --setting pleal conf
 	local confTable = {}
 	if args.dump then
 		confTable.dumpScripts = true
+	end
+	if args.noDumpLineIndicators == nil then
+		confTable.dumpLineIndicators = true --false by default
 	end
 	pleal.setConfig(confTable)
 end
