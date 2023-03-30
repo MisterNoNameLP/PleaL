@@ -2016,7 +2016,7 @@ do --plealTranspiler
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.7.3"
+local version = "0.7.4"
 
 local pleal = {}
 
@@ -2302,7 +2302,7 @@ local function transpile(input, note)
 	if conf.removeConfLine and input:sub(0, 2) == "#!" or input:sub(0, 2) == "#?" then
 		log("Remove conf line")
 		local confLineEnd = input:find("\n")
-		input = input:sub(confLineEnd + 1)
+		input = input:sub(confLineEnd)
 	end
 	
 	--error checks
