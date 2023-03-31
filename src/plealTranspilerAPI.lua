@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.8"
+local version = "0.8.1"
 
 local pleal = {}
 
@@ -164,13 +164,6 @@ local function embedVariables(input, conf)
 		local symbol
 		local prevSymbol, nextSymbol
 		local opener
-
-		--preparing opener to handle [[]] strings
-		if finisher == "]]" then
-			opener = "[["
-		else
-			opener = finisher
-		end
 	
 		--getting for relevant symbols
 		local function setSymbol()
@@ -187,9 +180,23 @@ local function embedVariables(input, conf)
 			return true
 		end
 
+		--preparing opener to handle [[]] strings
+		if finisher == "]]" then
+			opener = "[["
+			if symbol == "]" and nextSymbol == "]" then
+				symbol = "]]"
+			end
+		else
+			opener = finisher
+		end
+
 		--error prevention 
+		print("finisher: ", finisher)
+		print("symbol: ", symbol)
+		print()
 
 		--process symbol
+		--finisher exists only if the parser in in a string.
 		if symbol == finisher then
 			cut(symbolPos)
 			if prevSymbol ~= "\\" then
@@ -247,8 +254,12 @@ local function embedVariables(input, conf)
 			end
 		else
 			cut(symbolPos)
-			if (symbol == "\"" or symbol == "'") and (not finisher or finisher == "]" or finisher == "]]") then
-			--if symbol == "\"" or symbol == "'" then
+			--if 
+			--	(symbol == "\"" or symbol == "'") and 
+			--	not finisher and 
+			--	not (finisher == "]" or finisher == "]]") 
+			--then
+			if (symbol == "\"" or symbol == "'") and (not finisher or finisher == "]") then
 				return keepCalling(embed, nil, symbol)
 			elseif symbol == "[" and nextSymbol == "[" and not finisher then
 				return keepCalling(embed, nil, "]]")
