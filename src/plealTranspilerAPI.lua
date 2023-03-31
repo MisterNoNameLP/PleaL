@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.8.1"
+local version = "0.8.2"
 
 local pleal = {}
 
@@ -189,11 +189,6 @@ local function embedVariables(input, conf)
 		else
 			opener = finisher
 		end
-
-		--error prevention 
-		print("finisher: ", finisher)
-		print("symbol: ", symbol)
-		print()
 
 		--process symbol
 		--finisher exists only if the parser in in a string.
