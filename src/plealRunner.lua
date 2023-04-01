@@ -21,7 +21,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local version = "0.3"
+local version = "0.3.1"
 local isDev = true
 
 --===== local vars =====--
@@ -60,6 +60,7 @@ do
 			table.insert(scriptArgs, arg)
 		else
 			table.insert(runnerArgs, arg)
+			table.remove(_G.arg, 1)
 		end
 		if not arg:find("-") then
 			runnerArgsCollected = true
