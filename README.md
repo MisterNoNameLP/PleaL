@@ -7,6 +7,12 @@ More information about the expanded syntax is avaiable in the [wiki](https://git
 It works by converting PleaL code into native lua code, so it can be run in any ordinary lua interpreter.  
 The PleaL transpiler is written in pure lua and has no need for additional libraries or C bindings.  
 
+# Installation
+### Linux
+At first the desired lua version have to be installed. How this is done it depending from the distribution used.  
+
+To work with PleaL, the [all in one PleaL runner script](https://github.com/MisterNoNameLP/PleaL/blob/main/building/release/pleal) have to be put in an folder included in your $PATH. PleaL scripts then can be executet by calling `pleal SCRIPT.pleal`.  
+
 # Usage
 The easyest way to use PleaL is to execute the [PleaL runner](https://github.com/MisterNoNameLP/PleaL/blob/main/src/plealRunner.lua) from the command line, givin the path do an PleaL script as first argument. This not only transpiles the PleaL code, but also expands the `require`, `dofile` and `loadfile` functions to be able to use PleaL files. So PleaL libraries can be required just like normal lua libraries for instance.
 
@@ -24,12 +30,6 @@ The PleaL transpiler itself is lua5.1+ and LuaJIT compatible. But due to missing
 PleaL is basically compatible with any lua code. It is an expansion of the lua syntax and should never ever reduce the possibilities the developers have. So lua libraries can be used inside of PleaL script just as usual.
 
 At the moment only the [variable embedding](https://github.com/MisterNoNameLP/pleal/wiki/Syntax#variable-embedding) could technically break scripts if strings are containing the embedding prefix symbol. But this problem can easly be fixed by changing the [configuration](https://github.com/MisterNoNameLP/pleal/wiki/Configuration) or by escaping the symbol using `\`.
-
-# Installation
-### Linux
-At first the desired lua version have to be installed. How this is done it depending from the distribution used.  
-
-To work with PleaL, the [all in one PleaL runner script](https://github.com/MisterNoNameLP/PleaL/blob/main/building/release/pleal) have to be put in an folder included in your $PATH. PleaL scripts then can be executet by calling `pleal SCRIPT.pleal`.
 
 # Versioning 
 Pleal uses [Semantic Versioning 2.0.0](https://semver.org/).  
