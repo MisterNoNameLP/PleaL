@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.8.2"
+local version = "0.9"
 
 local pleal = {}
 
@@ -37,13 +37,15 @@ local globalConfig = {
 	removeConfLine = true,
 	varNameCapsuleOpener = "{",
 	varNameCapsuleFinisher = "}",
+	execCapsuleOpener = "(",
+	execCapsuleFinisher = ")",
 	dumpScripts = false,
 	dumpLineIndicators = false,
 }
 
 
-local replacePrefixBlacklist = "%\"'[]{}"
-local allowedVarNameSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_." --string pattern
+local replacePrefixBlacklist = "%\"'[]{}()"
+local allowedVarNameSymbols = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890_.()" --string pattern
 
 --===== internal functions =====--
 --=== basic functions ===--
@@ -199,6 +201,9 @@ local function embedVariables(input, conf)
 			end
 		elseif finisher and symbol == replacePrefix and finisher ~= "]" then
 			local varNameCapsuleIsUsed = false
+			local varFinishingPos
+			local varFinishingSymbol
+
 			if prevSymbol == "\\" then
 				cut(symbolPos - 2)
 				input = input:sub(2)
@@ -211,8 +216,8 @@ local function embedVariables(input, conf)
 				varNameCapsuleIsUsed = true
 			end
 
-			local varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
-			local varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos)
+			varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
+			varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos) --to handle table embedding
 
 			--cut out the var name
 			local varName = input:sub(0, varFinishingPos - 1)
