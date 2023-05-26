@@ -22,7 +22,7 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.9"
+local version = "0.9.1"
 
 local pleal = {}
 
@@ -42,6 +42,8 @@ local globalConfig = {
 	dumpScripts = false,
 	dumpLineIndicators = false,
 }
+
+local originalCurrentlyTranspiledScript
 
 
 local replacePrefixBlacklist = "%\"'[]{}()"
@@ -214,9 +216,14 @@ local function embedVariables(input, conf)
 			if nextSymbol == conf.varNameCapsuleOpener then
 				input = input:sub(2)
 				varNameCapsuleIsUsed = true
+				varFinishingPos = input:find(conf.varNameCapsuleFinisher)
+			else
+				varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
 			end
-
-			varFinishingPos = input:find("[^" .. allowedVarNameSymbols .. "]")
+			if varNameCapsuleIsUsed and not varFinishingPos then
+				err("Opened var name capsule is not closed at line: " .. tostring(select(2, output:gsub("\n", "\n")) + 1) .. "\n" .. originalCurrentlyTranspiledScript:match("[^\n]+") .. "\n ...")
+			end
+			
 			varFinishingSymbol = input:sub(varFinishingPos, varFinishingPos) --to handle table embedding
 
 			--cut out the var name
@@ -225,9 +232,7 @@ local function embedVariables(input, conf)
 			--remove var name cabsule closer
 			if varNameCapsuleIsUsed and input:sub(0, 1) == conf.varNameCapsuleFinisher then
 				input = input:sub(2)
-			elseif varNameCapsuleIsUsed then
-				warn("Opened var name capsule is not closed at line: " .. tostring(select(2, output:gsub("\n", "\n")) + 1))
-			end
+			end 
 			--remove replacePrefix
 			output = output:sub(0, -2)
 
@@ -306,6 +311,11 @@ local function transpile(input, note)
 	local lineCount = 0	
 	local _, conf
 
+	if note then
+		input = "--[[" .. tostring(note) .. "]] " .. input
+	end
+	originalCurrentlyTranspiledScript = input --for debugging purpose / better error msgs
+
 	--load conf line
 	do
 		local err
@@ -358,9 +368,6 @@ local function transpile(input, note)
 
 	--finishing up
 	log("Finishing up")
-	if note then
-		input = "--[[" .. tostring(note) .. "]]" .. input
-	end
 
 	if globalConfig.dumpScripts then
 		local toDump
@@ -378,6 +385,7 @@ local function transpile(input, note)
 
 		dlog("    vvvvvvv PLEAL DUMP BEGINNING vvvvvvv \n" .. toDump .. "\n       ^^^^^^^ PLEAL DUMP END ^^^^^^^\n")
 	end
+	originalCurrentlyTranspiledScript = nil
 
 	return true, conf, input
 end

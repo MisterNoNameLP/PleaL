@@ -21,7 +21,7 @@
 	You should have received a copy of the GNU General Public License
 	along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
-local version = "0.3.1"
+local version = "0.3.2"
 local isDev = true
 
 --===== local vars =====--
@@ -96,10 +96,10 @@ pleal.setLogFunctions({
 	--log = print, --debug
 	dlog = print,
 	warn = function(...)
-		print("PLEAL WARN: ", ...)
+		print("[PleaL transpiling warn]: ", ...)
 	end,
 	err = function(...)
-		print(...)
+		print("[PleaL transpiling error]: ", ...)
 		os.exit(1)
 	end,
 })
