@@ -2016,7 +2016,7 @@ do --plealTranspiler
     along with this program.  If not, see <https://www.gnu.org/licenses/>.
 ]]
 
-local version = "0.9.1"
+local version = "0.9.2"
 
 local pleal = {}
 
@@ -2136,18 +2136,20 @@ local function loadConf(input) --removes the conf line from the input and return
 				return false, "Invalid file conf line"
 			end
 			_, scriptConf = pcall(confInterpreterFunc)
-			--input = input:sub(len(line) + 1) --cut out conf line
+			input = input:sub(len(line) + 1) --cut out conf line
+		elseif line:sub(0, 2) == "#!" then
+			input = input:sub(len(line) + 1)
 		end
 		break
 	end
 	if type(scriptConf) ~= "table" then
-		return conf
+		return conf, input
 	else
 		for i, c in pairs(scriptConf) do
 			conf[i] = c
 		end
 	end
-	return conf
+	return conf, input
 end
 local function embedVariables(input, conf)
 	local output = ""
@@ -2305,11 +2307,6 @@ local function transpile(input, note)
 	local lineCount = 0	
 	local _, conf
 
-	if note then
-		input = "--[[" .. tostring(note) .. "]] " .. input
-	end
-	originalCurrentlyTranspiledScript = input --for debugging purpose / better error msgs
-
 	--load conf line
 	do
 		local err
@@ -2318,8 +2315,15 @@ local function transpile(input, note)
 		if not conf then
 			err("Could conf line")
 			return false, "Could not load conf line", err
+		else 
+			input = err
 		end
 	end
+
+	if note then
+		input = "--[[" .. tostring(note) .. "]] " .. input
+	end
+	originalCurrentlyTranspiledScript = input --for debugging purpose / better error msgs
 
 	--process conf 
 	if conf.removeConfLine and input:sub(0, 2) == "#!" or input:sub(0, 2) == "#?" then
